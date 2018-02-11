@@ -2,21 +2,32 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Web.Script.Serialization;
 
 namespace UnityLogServerListener
 {
     class Program
     {
-        private const int DEFAULT_PORT = 56223;
-        private static JavaScriptSerializer jsonSerializer = new JavaScriptSerializer();
+        const int DEFAULT_PORT = 56223;
+        static JavaScriptSerializer jsonSerializer = new JavaScriptSerializer();
 
         static void Main(string[] args)
         {
+            new Thread(recv).Start(args);
+
+            while (true)
+                Console.ReadKey(true);
+        }
+
+        private static void recv(object _args)
+        {
+            var args = (string[]) _args;
+
             var port = DEFAULT_PORT;
             var format = "[%i][%t][%l]: %m";
 
-            if(args.Length > 1)
+            if (args.Length >= 1)
                 if (!int.TryParse(args[0], out port))
                 {
                     Console.WriteLine("Usage:\nulogproj.exe [port]\nulogproj.exe port format");
@@ -30,6 +41,7 @@ namespace UnityLogServerListener
             IPEndPoint senderEndPoint = null;
 
             Console.WriteLine($"============ start listen at port: {port} ============");
+
 
             while (true)
             {
